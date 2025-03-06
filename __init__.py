@@ -77,6 +77,7 @@ async def _(bot: Bot, event: NoticeEvent, matcher : Matcher):
     user_info = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
     nickname = user_info['card'] or user_info['nickname']
     histry_event = await bot.get_msg(message_id=notice_event['message_id'])
+    if histry_event['sender']['user_id'] != event.self_id: return
     if histry_event['message'][-1]['type'] == 'text': msg = str(histry_event['message'][-1]['data']['text'])
     else: return
     data = {

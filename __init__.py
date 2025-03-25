@@ -2,9 +2,21 @@ import asyncio, aiohttp
 from nonebot import on_command, on_notice
 from typing import Union, List, Tuple, Dict
 from nonebot.permission import SUPERUSER
+from nonebot.plugin import PluginMetadata
 from nonebot.params import Depends, CommandArg, Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, NoticeEvent, MessageSegment, Message
 from nonebot.adapters.onebot.v11.permission import GROUP, GROUP_ADMIN, GROUP_OWNER
+
+
+__plugin_meta__ = PluginMetadata(
+    name="扑克对决",
+    description="参考小游戏合集重写的扑克对决，大部分操作支持“按钮”，规则请看\nhttps://github.com/MoonofBridge24/nonebot_plugin_poker",
+    usage="扑克对决/卡牌对决/接受：发起或接受对决\n重置对决：允许参与者或者群管重置本群对决\n出牌 1/2/3：出牌命令，当按钮失效的时候可以使用命令",
+    type="application",
+    homepage="https://github.com/MoonofBridge24/nonebot_plugin_poker",
+    supported_adapters={"nonebot.adapters.onebot.v11"},
+)
+
 
 poker = on_command("卡牌对决", aliases={'接受',}, permission=GROUP)
 hand_out = on_command("出牌", permission=GROUP)

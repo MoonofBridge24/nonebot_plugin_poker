@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name='nonebot_plugin_poker',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(),
     install_requires=[
-        "nonebot2>=2.0.0",
+        "nonebot2[onebot]>=2.0.0",
     ],
     author='MoonofBridge24',
     author_email='moonofbridge24@foxmail.com',

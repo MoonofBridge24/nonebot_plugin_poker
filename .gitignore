@@ -2,7 +2,6 @@
 .venv
 .vscode
 .env.*
-*.toml
 *.bat
 __pycache__/
 players/

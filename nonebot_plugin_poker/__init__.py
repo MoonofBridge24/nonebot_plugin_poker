@@ -141,8 +141,11 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
         state['player1']['name'] = nickname
         msg_id = await matcher.send(f'{nickname} 发起了一场对决，正在等待群友接受对决...\n(1分钟后自动超时)')
         await asyncio.sleep(0.5)
-        await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                     code = '424', is_add = True)
+        try:
+            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
+                                         code = '424', is_add = True)
+        except Exception as e:
+            print(e)
         return
     state['player2']['name'] = nickname
     if state['player1']['uin'] == user_id: state['player2']['name'] = 'BOT'
@@ -159,8 +162,11 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
     await asyncio.sleep(0.5)
     for i in ['123', '79', '124']:
         await asyncio.sleep(0.5)
-        await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                     code = i, is_add = True)
+        try:
+            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
+                                         code = i, is_add = True)
+        except Exception as e:
+            print(e)
 
 
 async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: int, state: PokerState):
@@ -176,16 +182,22 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
         await reset(group_id)
         msg_id = await matcher.send(msg)
         await asyncio.sleep(0.5)
-        await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                     code = '424', is_add = True)
+        try:
+            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
+                                         code = '424', is_add = True)
+        except Exception as e:
+            print(e)
         await matcher.finish()
     else:
         msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
         await asyncio.sleep(0.5)
-        for i in ['123', '79', '124']:
-            await asyncio.sleep(0.5)
-            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                         code = i, is_add = True)
+        try:
+            for i in ['123', '79', '124']:
+                await asyncio.sleep(0.5)
+                await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
+                                             code = i, is_add = True)
+        except Exception as e:
+            print(e)
         await matcher.finish()
 
 
@@ -199,6 +211,9 @@ async def _(bot: Bot, event: GroupMessageEvent):
     await reset(group_id)
     msg_id = await reset_game.send('重置成功，点击按钮再来一局')
     await asyncio.sleep(0.5)
-    await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                 code = '424', is_add = True)
+    try:
+        await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
+                                     code = '424', is_add = True)
+    except Exception as e:
+        print(e)
 

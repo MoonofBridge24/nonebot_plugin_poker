@@ -23,6 +23,9 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/MoonofBridge24/nonebot_plugin_poker"
 
+[tool.setuptools.packages.find]
+include = ["nonebot_plugin_poker*"]
+
 [tool.nonebot]
 adapters = [
     { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }

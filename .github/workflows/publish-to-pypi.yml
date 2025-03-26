@@ -2,8 +2,8 @@ name: Publish Python Package
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main  # 你可以根据需要更改分支名称
 
 jobs:
   build:

@@ -1,0 +1,17 @@
+*.pyc
+.venv
+.vscode
+.env.*
+*.toml
+*.bat
+__pycache__/
+players/
+*.db
+config.json
+shop.json
+two_exp_cd.json
+impart_pk.json
+x_world.json
+*info.json
+impart_person.json
+bot.py

@@ -94,3 +94,9 @@ pip install nonebot_plugin_poke
   <img src="image/2.jpg" alt="示例图片2" width="300" style="margin-right: 10px;">
   <img src="image/3.jpg" alt="示例图片3" width="300">
 </div>
+
+# 更新内容
+
+```
+v0.1.6 为on_notice添加规则，调用Rule判断是否符合条件
+```

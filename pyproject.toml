@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nonebot_plugin_poker"
-version = "0.1.5"
+version = "0.1.6"
 description = "详见https://github.com/MoonofBridge24/nonebot_plugin_poker"
 authors = [
     { name = "MoonofBridge24", email = "moonofbridge24@foxmail.com" }
@@ -14,7 +14,7 @@ dependencies = [
     "nonebot-adapter-onebot>=2.0.0"
 ]
 readme = "README.md"
-requires-python = ">=3.9, <4.0"
+requires-python = ">=3.10, <4.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

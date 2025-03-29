@@ -1,6 +1,7 @@
 import asyncio
 from nonebot import on_command, on_notice, get_driver
 from nonebot.permission import SUPERUSER
+from nonebot.rule import Rule
 from nonebot.message import run_preprocessor
 from nonebot.plugin import PluginMetadata
 from nonebot.params import Depends, CommandArg, Matcher
@@ -22,7 +23,8 @@ __plugin_meta__ = PluginMetadata(
 poker = on_command("卡牌对决", aliases={"接受","扑克对决"}, permission=GROUP)
 hand_out = on_command("出牌", permission=GROUP)
 reset_game = on_command("重置对决", permission=GROUP)
-reaction = on_notice()
+reaction_poker = on_notice(rule_of_reaction(rule='regex',args=[r'\(1分钟后自动超时\)$',r'再来一局$'],codes=['424']), priority=5, block=True)
+reaction_hand_out = on_notice(rule_of_reaction(rule='keyword',args=['出牌 1/2/3'],codes=['123','79','124']), priority=5, block=True)
 
 
 async def reset(group: int = 0):
@@ -70,69 +72,54 @@ async def _(event: GroupMessageEvent):
         del poker_state[key]
 
 
+@reaction_poker.handle()
 @poker.handle()
-async def _(bot: Bot, event: GroupMessageEvent, matcher : Matcher):
+async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher):
     '发起对决'
     group_id = event.group_id
+    reaction = isinstance(event, NoticeEvent)
     if not group_id in poker_state: await reset(group_id)
     state = poker_state[group_id]
-    if state['player1']['hand']: await poker.finish('有人正在对决呢，等会再来吧~')
-    nickname = event.sender.card or event.sender.nickname
+    if state['player1']['hand']: await matcher.finish('有人正在对决呢，等会再来吧~') if not reaction else await matcher.finish()
+    if reaction:
+        user_id = event.dict()['operator_id']
+        user_info = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
+        nickname = user_info['card'] or user_info['nickname']
+    else:
+        user_id = event.user_id
+        nickname = event.sender.card or event.sender.nickname
     state['time'] = event.time
-    await start_game(bot, matcher, group_id, event.user_id, nickname, state)
+    await start_game(bot, matcher, group_id, user_id, nickname, state)
 
 
+@reaction_hand_out.handle()
 @hand_out.handle()
-async def _(bot: Bot, event: GroupMessageEvent, matcher : Matcher, args: Message = CommandArg()):
+async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher, args: Message | None = CommandArg()):
     '出牌判定'
     group_id = event.group_id
-    user_id = event.user_id
-    choice = int(args.extract_plain_text().strip())
+    reaction = isinstance(event, NoticeEvent)
+    if reaction:
+        user_id = event.dict()['operator_id']
+        match event.dict()['code']:
+            case '123':
+                choice = 1
+            case '79':
+                choice = 2
+            case '124':
+                choice = 3
+    else:
+        user_id = event.user_id
+        choice = int(args.extract_plain_text().strip())
     if not group_id in poker_state: await reset(group_id)
     state = poker_state[group_id]
     if not state['player1']['hand']:
-        await hand_out.finish('对决还没开始呢，发起一轮新对决吧~')
+        await matcher.finish('对决还没开始呢，发起一轮新对决吧~') if not reaction else await matcher.finish()
     if state['player1']['uin'] != user_id:
-        await hand_out.finish('没牌的瞎出干什么')
+        await matcher.finish('没牌的瞎出干什么') if not reaction else await matcher.finish()
     if not choice or not (choice in range(1, len(state['player1']['hand'])+1)):
-        await hand_out.finish('请正确输入出牌序号')
+        await matcher.finish('请正确输入出牌序号') if not reaction else await matcher.finish()
     state['time'] = event.time
     await process_hand_out(bot, matcher, group_id, choice, state)
-
-
-@reaction.handle()
-async def _(bot: Bot, event: NoticeEvent, matcher : Matcher):
-    '表情回应处理'
-    notice_event = event.dict()
-    if notice_event['notice_type'] != 'reaction' or notice_event['sub_type'] != 'add' or notice_event['operator_id'] == notice_event['self_id']: return
-    group_id = notice_event['group_id']
-    user_id = notice_event['operator_id']
-    user_info = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
-    nickname = user_info['card'] or user_info['nickname']
-    histry_event = await bot.get_msg(message_id=notice_event['message_id'])
-    if histry_event['sender']['user_id'] != event.self_id: return
-    if histry_event['message'][-1]['type'] == 'text': msg = histry_event['message'][-1]['data']['text']
-    else: return
-    if not group_id in poker_state: await reset(group_id)
-    state = poker_state[group_id]
-    if msg.endswith('出牌 1/2/3'):
-        match notice_event['code']:
-                case '123':
-                    choice = 1
-                case '79':
-                    choice = 2
-                case '124':
-                    choice = 3
-        if not state['player1']['hand']: return
-        if state['player1']['uin'] != user_id: return
-        if not choice or not (choice in range(1, len(state['player1']['hand'])+1)): return
-        state['time'] = event.time
-        await process_hand_out(bot, matcher, group_id, choice, state)
-    if msg.endswith('再来一局') or msg.endswith('(1分钟后自动超时)'):
-        if notice_event['code'] == '424':
-            if state['player1']['hand']: return
-            state['time'] = event.time
-            await start_game(bot, matcher, group_id, user_id, nickname, state)
 
 
 async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, nickname: str, state: PokerState):
@@ -159,7 +146,7 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
         await matcher.send(msg)
         await process_hand_out(bot, matcher, group_id, pick, state)
     msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
     for i in ['123', '79', '124']:
         await asyncio.sleep(0.5)
         try:
@@ -190,7 +177,7 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
         await matcher.finish()
     else:
         msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         try:
             for i in ['123', '79', '124']:
                 await asyncio.sleep(0.5)
@@ -202,15 +189,15 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
 
 
 @reset_game.handle()
-async def _(bot: Bot, event: GroupMessageEvent):
+async def _(bot: Bot, event: GroupMessageEvent, matcher : Matcher):
     group_id = event.group_id
     if not group_id in poker_state: await reset(group_id)
     state = poker_state[group_id]
     if event.sender.role != 'admin' and not event.user_id in [state['player1']['uin'], state['player2']['uin']]:
-        await reset_game.finish('你无权操作，请稍后再试')
+        await matcher.finish('你无权操作，请稍后再试')
     await reset(group_id)
-    msg_id = await reset_game.send('重置成功，点击按钮再来一局')
-    await asyncio.sleep(0.5)
+    msg_id = await matcher.send('重置成功，点击按钮再来一局')
+    await asyncio.sleep(1)
     try:
         await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
                                      code = '424', is_add = True)

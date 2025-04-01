@@ -146,7 +146,7 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
         await matcher.send(msg)
         await process_hand_out(bot, matcher, group_id, pick, state)
     msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
     for i in ['123', '79', '124']:
         await asyncio.sleep(0.5)
         try:
@@ -177,7 +177,7 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
         await matcher.finish()
     else:
         msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
         try:
             for i in ['123', '79', '124']:
                 await asyncio.sleep(0.5)
@@ -197,7 +197,7 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher : Matcher):
         await matcher.finish('你无权操作，请稍后再试')
     await reset(group_id)
     msg_id = await matcher.send('重置成功，点击按钮再来一局')
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
     try:
         await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
                                      code = '424', is_add = True)

@@ -2,7 +2,7 @@ import random, time, re
 from typing import Dict, List, Tuple, Union
 
 from nonebot.rule import Rule
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent, Bot
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent, Bot, Event
 
 
 PokerState = Dict[str, Union[int, str, float, List[Tuple[int, int]], Dict[str, Union[int, str, float, List[Tuple[int, int]]]]]]
@@ -16,11 +16,6 @@ async def msg_at(event: GroupMessageEvent) -> int:
             qq = msg.data['qq']
             break
     return qq
-
-
-async def return_true(*args, **kwargs) -> bool:
-    '返回True'
-    return True
 
 
 def rule_of_reaction(rule: str = 'keyword', args: List[str] =[] , codes: List[str] = []) -> Rule:
@@ -40,6 +35,10 @@ def rule_of_reaction(rule: str = 'keyword', args: List[str] =[] , codes: List[st
         histry = await bot.get_msg(message_id=notice['message_id'])
         if histry['sender']['user_id'] != event.self_id: return False # 判断是否为自己发出的消息
         if all(msg['type'] != 'text' for msg in histry['message']): return False # 判断是否存在文字消息
+        for msg in histry['message']: # 检测第一条at信息是否为触发者，如果消息不带at则跳过检查
+            if msg['type'] == 'at':
+                if int(msg['data']['qq']) != notice['operator_id']: return False
+                break
         if not args: return True
         msg = ''.join(msg['data']['text'] for msg in histry['message'] if msg['type'] == 'text') # 提取文字消息
         msg = msg.strip()

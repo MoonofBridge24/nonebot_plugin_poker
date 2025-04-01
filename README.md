@@ -98,5 +98,6 @@ pip install nonebot_plugin_poke
 # 更新内容
 
 ```
+v0.1.7 检测逻辑更严格，带at的消息仅允许被at的玩家触发，避免误触
 v0.1.6 为on_notice添加规则，调用Rule判断是否符合条件
 ```

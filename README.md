@@ -90,9 +90,9 @@ pip install nonebot_plugin_poke
 # 效果图
 
 <div style="display: flex;">
-  <img src="image/1.jpg" alt="示例图片1" width="300" style="margin-right: 10px;">
-  <img src="image/2.jpg" alt="示例图片2" width="300" style="margin-right: 10px;">
-  <img src="image/3.jpg" alt="示例图片3" width="300">
+  <img src="image/1.jpg" alt="示例图片1" width="150" style="margin-right: 10px;">
+  <img src="image/2.jpg" alt="示例图片2" width="150" style="margin-right: 10px;">
+  <img src="image/3.jpg" alt="示例图片3" width="150">
 </div>
 
 # 更新内容

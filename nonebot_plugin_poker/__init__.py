@@ -147,6 +147,7 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
         pick = random.randint(1, len(state['player1']['hand']))
         await matcher.send(msg)
         await process_hand_out(bot, matcher, group_id, pick, state)
+        await matcher.finish()
     msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
     await asyncio.sleep(0.5)
     for i in ['123', '79', '124']:

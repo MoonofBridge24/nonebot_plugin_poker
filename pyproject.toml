@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nonebot_plugin_poker"
-version = "0.1.9"
+version = "0.1.10"
 description = "详见https://github.com/MoonofBridge24/nonebot_plugin_poker"
 authors = [
     { name = "MoonofBridge24", email = "moonofbridge24@foxmail.com" }

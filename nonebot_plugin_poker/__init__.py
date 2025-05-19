@@ -4,7 +4,8 @@ from nonebot.permission import SUPERUSER
 from nonebot.rule import Rule
 from nonebot.message import run_preprocessor
 from nonebot.plugin import PluginMetadata
-from nonebot.params import Depends, CommandArg, Matcher
+from nonebot.params import Depends, CommandArg
+from nonebot.internal.matcher import Matcher
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, NoticeEvent, MessageSegment, Message
 from nonebot.adapters.onebot.v11.permission import GROUP, GROUP_ADMIN, GROUP_OWNER
 from .utils import *
@@ -27,6 +28,7 @@ reaction_poker = on_notice(rule_of_reaction(rule='regex',args=[r'\(1分钟后自
 reaction_hand_out = on_notice(rule_of_reaction(rule='keyword',args=['出牌 1/2/3'],codes=['123','79','124']), priority=5, block=True)
 
 
+poker_state = {}
 async def reset(group: int = 0):
     '数据初始化'
     global poker_state
@@ -76,7 +78,7 @@ async def _(event: GroupMessageEvent):
 @poker.handle()
 async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher):
     '发起对决'
-    group_id = event.group_id
+    group_id = event.group_id # type: ignore
     reaction = isinstance(event, NoticeEvent)
     if not group_id in poker_state: await reset(group_id)
     state = poker_state[group_id]
@@ -87,7 +89,7 @@ async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher)
         nickname = user_info['card'] or user_info['nickname']
     else:
         user_id = event.user_id
-        nickname = event.sender.card or event.sender.nickname
+        nickname = event.sender.card or event.sender.nickname or ''
     state['time'] = event.time
     await start_game(bot, matcher, group_id, user_id, nickname, state)
 
@@ -96,7 +98,7 @@ async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher)
 @hand_out.handle()
 async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher, args: Message | None = CommandArg()):
     '出牌判定'
-    group_id = event.group_id
+    group_id = event.group_id # type: ignore
     reaction = isinstance(event, NoticeEvent)
     if reaction:
         user_id = event.dict()['operator_id']
@@ -109,7 +111,7 @@ async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher,
                 choice = 3
     else:
         user_id = event.user_id
-        choice = int(args.extract_plain_text().strip())
+        choice = int(args.extract_plain_text().strip()) # type: ignore
     if not group_id in poker_state: await reset(group_id)
     state = poker_state[group_id]
     if not state['player1']['hand']:
@@ -174,7 +176,6 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
                                          code = '424', is_add = True)
         except Exception as e:
             print(e)
-        await matcher.finish()
     else:
         msg_id = await matcher.send(MessageSegment.at(state['player1']['uin']) + msg)
         await asyncio.sleep(0.5)
@@ -185,7 +186,6 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
                                              code = i, is_add = True)
         except Exception as e:
             print(e)
-        await matcher.finish()
 
 
 @reset_game.handle()

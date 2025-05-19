@@ -1,11 +1,26 @@
 import random, time, re
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional, TypedDict
 
 from nonebot.rule import Rule
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, NoticeEvent, Bot, Event
 
 
-PokerState = Dict[str, Union[int, str, float, List[Tuple[int, int]], Dict[str, Union[int, str, float, List[Tuple[int, int]]]]]]
+class PlayerState(TypedDict):
+    uin: int
+    name: str
+    HP: float
+    ATK: float
+    DEF: float
+    SP: int
+    suck: float
+    hand: List[Tuple[int, int]]
+
+class PokerState(TypedDict):
+    time: int
+    player1: PlayerState
+    player2: PlayerState
+    deck: List[Tuple[int, int]]
+    winer: Optional[str]
 
 
 async def msg_at(event: GroupMessageEvent) -> int:
@@ -18,12 +33,13 @@ async def msg_at(event: GroupMessageEvent) -> int:
     return qq
 
 
-def rule_of_reaction(rule: str = 'keyword', args: List[str] =[] , codes: List[str] = []) -> Rule:
+def rule_of_reaction(rule: str = 'keyword', args: List[str] =[], codes: List[str|int] = [], atcheck: bool = True) -> Rule:
     '''
     对reaction事件进行判断
     rule: str 可选 keyword/regex
     args: list[str] 关键词/正则表达式列表，为空时跳过rule检查
-    codes: list[str] 回应代码列表，code是纯数字，但是方便处理这里请填字符串列表，为空时跳过code检查
+    codes: list[str] 回应代码列表，code是一个数字，为空时跳过code检查
+    atcheck: bool 是否检查at，默认检查，非at对象无法触发
     '''
     async def rule_checker(event: NoticeEvent, bot: Bot) -> bool:
         if rule not in ['keyword', 'regex']: return False
@@ -31,13 +47,14 @@ def rule_of_reaction(rule: str = 'keyword', args: List[str] =[] , codes: List[st
         notice = event.dict() # 转换为字典方便读取数据
         # 判断是否为添加表情回应
         if event_type != 'notice.reaction.add' or notice['operator_id'] == notice['self_id']: return False
-        if codes and notice['code'] not in codes: return False
+        strcodes = [str(code) for code in codes]
+        if strcodes and notice['code'] not in strcodes: return False
         histry = await bot.get_msg(message_id=notice['message_id'])
         if histry['sender']['user_id'] != event.self_id: return False # 判断是否为自己发出的消息
         if all(msg['type'] != 'text' for msg in histry['message']): return False # 判断是否存在文字消息
         for msg in histry['message']: # 检测第一条at信息是否为触发者，如果消息不带at则跳过检查
             if msg['type'] == 'at':
-                if int(msg['data']['qq']) != notice['operator_id']: return False
+                if int(msg['data']['qq']) != notice['operator_id'] and atcheck: return False
                 break
         if not args: return True
         msg = ''.join(msg['data']['text'] for msg in histry['message'] if msg['type'] == 'text') # 提取文字消息

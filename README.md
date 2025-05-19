@@ -90,14 +90,16 @@ pip install nonebot_plugin_poke
 # 效果图
 
 <div style="display: flex;">
-  <img src="image/1.jpg" alt="示例图片1" width="150" style="margin-right: 10px;">
-  <img src="image/2.jpg" alt="示例图片2" width="150" style="margin-right: 10px;">
-  <img src="image/3.jpg" alt="示例图片3" width="150">
+  <img src="image/1.jpg" alt="示例图片1" width="300" style="margin-right: 10px;">
+  <img src="image/2.jpg" alt="示例图片2" width="300" style="margin-right: 10px;">
+  <img src="image/3.jpg" alt="示例图片3" width="300">
 </div>
 
 # 更新内容
 
 ```
+v0.1.9 规范了部分代码格式
+v0.1.8 修复已知问题
 v0.1.7 检测逻辑更严格，带at的消息仅允许被at的玩家触发，避免误触
 v0.1.6 为on_notice添加规则，调用Rule判断是否符合条件
 ```

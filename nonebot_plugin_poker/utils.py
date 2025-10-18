@@ -46,15 +46,15 @@ def rule_of_reaction(rule: str = 'keyword', args: List[str] =[], codes: List[str
         event_type = event.get_event_name()
         notice = event.dict() # 转换为字典方便读取数据
         # 判断是否为添加表情回应
-        if event_type != 'notice.reaction.add' or notice['operator_id'] == notice['self_id']: return False
+        if event_type != 'notice.group_msg_emoji_like' or notice['user_id'] == notice['self_id']: return False
         strcodes = [str(code) for code in codes]
-        if strcodes and notice['code'] not in strcodes: return False
+        if strcodes and notice['likes'][0]['emoji_id'] not in strcodes: return False
         histry = await bot.get_msg(message_id=notice['message_id'])
         if histry['sender']['user_id'] != event.self_id: return False # 判断是否为自己发出的消息
         if all(msg['type'] != 'text' for msg in histry['message']): return False # 判断是否存在文字消息
         for msg in histry['message']: # 检测第一条at信息是否为触发者，如果消息不带at则跳过检查
             if msg['type'] == 'at':
-                if int(msg['data']['qq']) != notice['operator_id'] and atcheck: return False
+                if int(msg['data']['qq']) != notice['user_id'] and atcheck: return False
                 break
         if not args: return True
         msg = ''.join(msg['data']['text'] for msg in histry['message'] if msg['type'] == 'text') # 提取文字消息
@@ -104,9 +104,9 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
             i += 1
             match suit:
                 case 1:
-                    A['DEF'] += point/2
+                    W['DEF'] -= point/2
                     A['ATK'] += point/2
-                    msg += f'\n♠{point}发动了盾击，造成{point/2}伤害且防御提高{point/2}'
+                    msg += f'\n♠{point}发动了盾击，造成{point/2}伤害且使对方防御降低{point/2}'
                 case 2:
                     A['HP'] += point/2
                     A['suck'] += 0.50
@@ -172,8 +172,7 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
                     W['DEF'] += point/2
                     msg += f'\n♠{point}发动了碎甲，防御提高{point/2}'
                     if A['ATK'] > W['DEF']:
-                        if A['DEF'] > point: A['DEF'] -= point
-                        else: A['DEF'] = 0.0
+                        A['DEF'] -= point
                         msg += f'，受伤时使对方防御降低{point}'
                 case 2:
                     W['HP'] += point/2
@@ -184,7 +183,7 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
                 case 3:
                     A['SP'] -= point
                     W['SP'] += point
-                    msg += f'\n♣{point}发动了打断，此卡不消耗技能点并扣除了对方技能点{point}'
+                    msg += f'\n♣{point}发动了震慑，此卡不消耗技能点并扣除了对方技能点{point}'
                 case 4:
                     W['ATK'] += point/2
                     msg += f'\n♦{point}发动了反击，造成{point/2}伤害并获得50%反伤'
@@ -195,16 +194,16 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
 
     # 回合结算
     HP_Max = W['HP'] >= 45
-    if A['ATK'] > W['DEF']:
+    if A['ATK'] > W['DEF'] and A['ATK'] > 0:
         W['HP'] -= A['ATK'] - W['DEF'] # 伤害
         A['HP'] += A['suck']*(A['ATK'] - W['DEF']) # 吸血
         if W['ATK']: A['HP'] -= (A['ATK'] - W['DEF'])/2 # 反伤
-        W['DEF'] = 0.0
+        if W['DEF'] > 0: W['DEF'] = 0.0
     else: W['DEF'] -= A['ATK']
-    if W['ATK'] > A['DEF']:
+    if W['ATK'] > A['DEF'] and W['ATK'] > 0:
         A['HP'] -= W['ATK'] - A['DEF'] # 反击
         W['HP'] += W['suck']*(W['ATK'] - A['DEF']) # 吸血
-        A['DEF'] = 0.0
+        if A['DEF'] > 0: A['DEF'] = 0.0
     else: A['DEF'] -= W['ATK']
     if A['HP'] <= 0:
         state['winer'] = 'player2'
@@ -228,13 +227,14 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
         return msgs
     if A['ATK']: A['suck'] = 0
     if W['DEF'] > 10: W['DEF'] = 10.0
-    else:
-        if W['DEF'] > 2: W['DEF'] -= 2
-        else: W['DEF'] = 0.0
+    elif W['DEF'] > 2: W['DEF'] -= 2
+    elif W['DEF'] < -2: W['DEF'] += 2
+    else: W['DEF'] = 0.0
     if W['ATK']: W['suck'] = 0
     A['ATK'] = 0
     W['ATK'] = 0
     A['hand'] = []
+    W['SP'] += 2
     if W['SP'] > -1:
         state['player1'], state['player2'] = W, A
         msgs = ['\n\n'.join(msgs)]

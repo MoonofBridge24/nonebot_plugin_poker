@@ -84,7 +84,7 @@ async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher)
     state = poker_state[group_id]
     if state['player1']['hand']: await matcher.finish('有人正在对决呢，等会再来吧~') if not reaction else await matcher.finish()
     if reaction:
-        user_id = event.dict()['operator_id']
+        user_id = event.dict()['user_id']
         user_info = await bot.get_group_member_info(group_id=group_id, user_id=user_id)
         nickname = user_info['card'] or user_info['nickname']
     else:
@@ -101,8 +101,8 @@ async def _(bot: Bot, event: GroupMessageEvent | NoticeEvent, matcher : Matcher,
     group_id = event.group_id # type: ignore
     reaction = isinstance(event, NoticeEvent)
     if reaction:
-        user_id = event.dict()['operator_id']
-        match event.dict()['code']:
+        user_id = event.dict()['user_id']
+        match event.dict()['likes'][0]['emoji_id']:
             case '123':
                 choice = 1
             case '79':
@@ -131,8 +131,7 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
         msg_id = await matcher.send(f'{nickname} 发起了一场对决，正在等待群友接受对决...\n(1分钟后自动超时)')
         await asyncio.sleep(0.5)
         try:
-            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                         code = '424', is_add = True)
+            await bot.set_msg_emoji_like(message_id = msg_id['message_id'], emoji_id = '424', set = True)
         except Exception as e:
             print(e)
         return
@@ -153,8 +152,7 @@ async def start_game(bot: Bot, matcher : Matcher, group_id: int, user_id: int, n
     for i in ['123', '79', '124']:
         await asyncio.sleep(0.5)
         try:
-            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                         code = i, is_add = True)
+            await bot.set_msg_emoji_like(message_id = msg_id['message_id'], emoji_id = i, set = True)
         except Exception as e:
             print(e)
 
@@ -173,8 +171,7 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
         msg_id = await matcher.send(msg)
         await asyncio.sleep(0.5)
         try:
-            await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                         code = '424', is_add = True)
+            await bot.set_msg_emoji_like(message_id = msg_id['message_id'], emoji_id = '424', set = True)
         except Exception as e:
             print(e)
     else:
@@ -183,8 +180,7 @@ async def process_hand_out(bot: Bot, matcher : Matcher, group_id: int, choice: i
         try:
             for i in ['123', '79', '124']:
                 await asyncio.sleep(0.5)
-                await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                             code = i, is_add = True)
+                await bot.set_msg_emoji_like(message_id = msg_id['message_id'], emoji_id = i, set = True)
         except Exception as e:
             print(e)
 
@@ -200,8 +196,7 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher : Matcher):
     msg_id = await matcher.send('重置成功，点击按钮再来一局')
     await asyncio.sleep(0.5)
     try:
-        await bot.set_group_reaction(group_id = group_id, message_id = msg_id['message_id'], 
-                                     code = '424', is_add = True)
+        await bot.set_msg_emoji_like(message_id = msg_id['message_id'], emoji_id = '424', set = True)
     except Exception as e:
         print(e)
 

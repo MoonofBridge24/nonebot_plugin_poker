@@ -1,6 +1,6 @@
 # 扑克对决
 
-从[小游戏合集](https://github.com/KarisAya/nonebot_plugin_game_collection)中复刻出来的一个小游戏，借用了战斗逻辑，同时使用reaction代替了按钮（仅保证[lgr](https://github.com/linyuchen/Lagrange.Core)用户能正常使用reaction）
+从[小游戏合集](https://github.com/KarisAya/nonebot_plugin_game_collection)中复刻出来的一个小游戏，借用了战斗逻辑，同时使用贴表情代替了按钮（仅保证[NC](https://github.com/NapNeko/NapCatQQ)用户能正常使用按钮）
 
 # 安装
 
@@ -100,6 +100,7 @@ pip install nonebot_plugin_poke
 # 更新内容
 
 ```
+v1.0.1 修复了再生和碎甲技能受击判断错误的问题
 v1.0.0 lgr.ob无人维护，改为兼容Napcat。
        -“打断”技能改名为“震慑”，实际效果不变。
        -防御力可为负值，受到伤害时会额外增加，防御力不为0时会缓慢变为0

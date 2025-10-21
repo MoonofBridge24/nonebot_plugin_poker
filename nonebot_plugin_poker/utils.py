@@ -171,13 +171,13 @@ async def play_poker(state: PokerState, choice: int) -> List[str]:
                 case 1:
                     W['DEF'] += point/2
                     msg += f'\n♠{point}发动了碎甲，防御提高{point/2}'
-                    if A['ATK'] > W['DEF']:
+                    if A['ATK'] > W['DEF'] and A['ATK'] > 0:
                         A['DEF'] -= point
                         msg += f'，受伤时使对方防御降低{point}'
                 case 2:
                     W['HP'] += point/2
                     msg += f'\n♥{point}发动了再生，生命回复{point/2}'
-                    if A['ATK'] > W['DEF']:
+                    if A['ATK'] > W['DEF'] and A['ATK'] > 0:
                         W['HP'] += point
                         msg += f'，本回合受击回复{point}'
                 case 3:
